@@ -32,6 +32,25 @@ Release 0.1 establishes:
 6. Founder involvement is reserved for decisions that cannot safely be delegated.
 7. Autonomy expands only after measured validation.
 
+## Implemented kernel capabilities
+
+- Canonical governed work-item lifecycle.
+- Immutable transition audit events.
+- SQLite-backed work-item snapshots and audit history.
+- Optimistic concurrency and stale-write protection.
+- Idempotent transition request handling.
+- Recovery by replaying the authoritative audit stream.
+- Automated lint, strict type checking, and tests through GitHub Actions.
+
+## Current build sequence
+
+1. Governed lifecycle state machine — implemented.
+2. Persistent audit ledger and work-item repository — implemented.
+3. Durable event bus and work queue — next.
+4. Agent registry and capability routing.
+5. Governance and independent review pipeline.
+6. Institutional memory and autonomous execution loop.
+
 ## Current status
 
-Foundation phase started. Existing KCS production is paused at KCS-072 until the autonomous pipeline is operational and validated.
+The Orchestrator Kernel is under active implementation. Existing KCS production remains paused at KCS-072 until the autonomous pipeline is operational and validated.
