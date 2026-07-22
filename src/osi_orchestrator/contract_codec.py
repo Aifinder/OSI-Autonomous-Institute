@@ -119,6 +119,20 @@ def _decode_value(value: Any, annotation: Any) -> Any:
         return annotation(value)
     if annotation is Any:
         return value
-    if annotation in {str, int, float, bool} and not isinstance(value, annotation):
-        raise TypeError(f"Expected {annotation.__name__}")
+    if annotation is float:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError("Expected float")
+        return float(value)
+    if annotation is int:
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError("Expected int")
+        return value
+    if annotation is bool:
+        if not isinstance(value, bool):
+            raise TypeError("Expected bool")
+        return value
+    if annotation is str:
+        if not isinstance(value, str):
+            raise TypeError("Expected str")
+        return value
     return value
