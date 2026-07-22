@@ -42,10 +42,14 @@ _ALLOWED_TRANSITIONS: dict[State, frozenset[State]] = {
     State.APPROVED: frozenset({State.CANONICAL, State.ESCALATED}),
     State.CANONICAL: frozenset({State.MONITORED, State.SUPERSEDED}),
     State.MONITORED: frozenset({State.REVISION, State.SUPERSEDED, State.ESCALATED}),
-    State.BLOCKED: frozenset({State.READY, State.EXECUTING, State.REVISION, State.ESCALATED, State.CANCELLED}),
+    State.BLOCKED: frozenset(
+        {State.READY, State.EXECUTING, State.REVISION, State.ESCALATED, State.CANCELLED}
+    ),
     State.PAUSED: frozenset({State.READY, State.EXECUTING, State.CANCELLED}),
     State.FAILED: frozenset({State.READY, State.REVISION, State.ESCALATED, State.CANCELLED}),
-    State.ESCALATED: frozenset({State.PLANNED, State.READY, State.REVISION, State.REJECTED, State.CANCELLED}),
+    State.ESCALATED: frozenset(
+        {State.PLANNED, State.READY, State.REVISION, State.REJECTED, State.CANCELLED}
+    ),
     State.SUPERSEDED: frozenset(),
     State.REJECTED: frozenset(),
     State.CANCELLED: frozenset(),
@@ -83,6 +87,7 @@ class AuditEvent:
     evidence: tuple[str, ...]
     constitutional_rule_id: str | None
     occurred_at: datetime
+    schema_version: str = "1.0"
 
 
 class InvalidTransition(ValueError):
