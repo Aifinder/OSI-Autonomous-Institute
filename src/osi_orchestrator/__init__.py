@@ -8,12 +8,28 @@ from .state_machine import (
     StateMachine,
     TransitionRequest,
 )
+from .storage import (
+    AuditLedger,
+    ConcurrencyError,
+    DuplicateRequestError,
+    SQLiteStore,
+    WorkItem,
+    WorkItemNotFound,
+    WorkItemRepository,
+)
 
 __all__ = [
     "Actor",
     "AuditEvent",
+    "AuditLedger",
+    "ConcurrencyError",
+    "DuplicateRequestError",
     "InvalidTransition",
+    "SQLiteStore",
     "State",
     "StateMachine",
     "TransitionRequest",
+    "WorkItem",
+    "WorkItemNotFound",
+    "WorkItemRepository",
 ]
