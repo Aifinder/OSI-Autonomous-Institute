@@ -134,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
                 goal, context=context,
                 budget_id=UUID(args.budget_id) if args.budget_id else None,
             )
-            output = {
+            output: dict[str, object] = {
                 "goal_id": str(result.goal_id), "status": result.status.value,
                 "artifact_ids": [str(item) for item in result.canonical_artifact_ids],
                 "escalation_id": str(result.escalation_id) if result.escalation_id else None,
