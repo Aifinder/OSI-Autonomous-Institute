@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Protocol
+from types import TracebackType
+from typing import Protocol, cast
 from uuid import UUID
 
 from .state_machine import Actor, AuditEvent, State, StateMachine, TransitionRequest
@@ -44,11 +44,20 @@ class AuditLedger(Protocol):
 
 
 class WorkItemRepository(Protocol):
-    def create(self, work_item_id: UUID, initial_state: State, occurred_at: datetime) -> WorkItem: ...
+    def create(
+        self,
+        work_item_id: UUID,
+        initial_state: State,
+        occurred_at: datetime,
+    ) -> WorkItem: ...
 
     def get(self, work_item_id: UUID) -> WorkItem: ...
 
-    def apply_transition(self, request: TransitionRequest, expected_version: int) -> WorkItem: ...
+    def apply_transition(
+        self,
+        request: TransitionRequest,
+        expected_version: int,
+    ) -> WorkItem: ...
 
 
 _SCHEMA = """
@@ -101,15 +110,29 @@ class SQLiteStore(AuditLedger, WorkItemRepository):
     def __enter__(self) -> SQLiteStore:
         return self
 
-    def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         self.close()
 
-    def create(self, work_item_id: UUID, initial_state: State, occurred_at: datetime) -> WorkItem:
+    def create(
+        self,
+        work_item_id: UUID,
+        initial_state: State,
+        occurred_at: datetime,
+    ) -> WorkItem:
         timestamp = occurred_at.isoformat()
         try:
             with self._connection:
                 self._connection.execute(
-                    "INSERT INTO work_items(id, state, version, created_at, updated_at) VALUES (?, ?, 0, ?, ?)",
+                    """
+                    INSERT INTO work_items(
+                        id, state, version, created_at, updated_at
+                    ) VALUES (?, ?, 0, ?, ?)
+                    """,
                     (str(work_item_id), initial_state.value, timestamp, timestamp),
                 )
         except sqlite3.IntegrityError as exc:
@@ -118,7 +141,11 @@ class SQLiteStore(AuditLedger, WorkItemRepository):
 
     def get(self, work_item_id: UUID) -> WorkItem:
         row = self._connection.execute(
-            "SELECT id, state, version, created_at, updated_at FROM work_items WHERE id = ?",
+            """
+            SELECT id, state, version, created_at, updated_at
+            FROM work_items
+            WHERE id = ?
+            """,
             (str(work_item_id),),
         ).fetchone()
         if row is None:
@@ -155,7 +182,11 @@ class SQLiteStore(AuditLedger, WorkItemRepository):
         ).fetchall()
         return tuple(_row_to_event(row) for row in rows)
 
-    def apply_transition(self, request: TransitionRequest, expected_version: int) -> WorkItem:
+    def apply_transition(
+        self,
+        request: TransitionRequest,
+        expected_version: int,
+    ) -> WorkItem:
         event = self._state_machine.transition(request)
         try:
             with self._connection:
@@ -169,9 +200,12 @@ class SQLiteStore(AuditLedger, WorkItemRepository):
                     raise ConcurrencyError(
                         f"Expected version {expected_version}, found {current['version']}"
                     )
-                if State(current["state"]) is not request.from_state:
+                persisted_state = State(cast(str, current["state"]))
+                if persisted_state is not request.from_state:
                     raise ConcurrencyError(
-                        f"Persisted state {current['state']} does not match request state {request.from_state.value}"
+                        "Persisted state "
+                        f"{persisted_state.value} does not match request state "
+                        f"{request.from_state.value}"
                     )
                 if self.contains_request(request.request_id):
                     raise DuplicateRequestError(str(request.request_id))
@@ -198,10 +232,18 @@ class SQLiteStore(AuditLedger, WorkItemRepository):
             raise
         return self.get(request.work_item_id)
 
-    def rebuild_state(self, work_item_id: UUID, initial_state: State = State.PROPOSED) -> State:
+    def rebuild_state(
+        self,
+        work_item_id: UUID,
+        initial_state: State = State.PROPOSED,
+    ) -> State:
         return self._state_machine.replay(initial_state, self.events_for(work_item_id))
 
-    def verify_snapshot(self, work_item_id: UUID, initial_state: State = State.PROPOSED) -> bool:
+    def verify_snapshot(
+        self,
+        work_item_id: UUID,
+        initial_state: State = State.PROPOSED,
+    ) -> bool:
         return self.rebuild_state(work_item_id, initial_state) is self.get(work_item_id).state
 
     def _insert_event(self, event: AuditEvent) -> None:
@@ -231,25 +273,28 @@ class SQLiteStore(AuditLedger, WorkItemRepository):
 
 def _row_to_work_item(row: sqlite3.Row) -> WorkItem:
     return WorkItem(
-        id=UUID(row["id"]),
-        state=State(row["state"]),
-        version=int(row["version"]),
-        created_at=datetime.fromisoformat(row["created_at"]),
-        updated_at=datetime.fromisoformat(row["updated_at"]),
+        id=UUID(cast(str, row["id"])),
+        state=State(cast(str, row["state"])),
+        version=cast(int, row["version"]),
+        created_at=datetime.fromisoformat(cast(str, row["created_at"])),
+        updated_at=datetime.fromisoformat(cast(str, row["updated_at"])),
     )
 
 
 def _row_to_event(row: sqlite3.Row) -> AuditEvent:
-    evidence: Iterable[str] = json.loads(row["evidence_json"])
+    raw_evidence = cast(list[str], json.loads(cast(str, row["evidence_json"])))
     return AuditEvent(
-        event_id=UUID(row["event_id"]),
-        request_id=UUID(row["request_id"]),
-        work_item_id=UUID(row["work_item_id"]),
-        from_state=State(row["from_state"]),
-        to_state=State(row["to_state"]),
-        actor=Actor(id=row["actor_id"], role=row["actor_role"]),
-        reason=row["reason"],
-        evidence=tuple(evidence),
-        constitutional_rule_id=row["constitutional_rule_id"],
-        occurred_at=datetime.fromisoformat(row["occurred_at"]),
+        event_id=UUID(cast(str, row["event_id"])),
+        request_id=UUID(cast(str, row["request_id"])),
+        work_item_id=UUID(cast(str, row["work_item_id"])),
+        from_state=State(cast(str, row["from_state"])),
+        to_state=State(cast(str, row["to_state"])),
+        actor=Actor(
+            id=cast(str, row["actor_id"]),
+            role=cast(str, row["actor_role"]),
+        ),
+        reason=cast(str, row["reason"]),
+        evidence=tuple(raw_evidence),
+        constitutional_rule_id=cast(str | None, row["constitutional_rule_id"]),
+        occurred_at=datetime.fromisoformat(cast(str, row["occurred_at"])),
     )
