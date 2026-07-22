@@ -23,6 +23,14 @@ from .contracts import (
     RiskLevel,
     WorkItemSpec,
 )
+from .governance import (
+    FounderEscalationPacket,
+    GovernanceAction,
+    GovernanceContext,
+    GovernanceStore,
+    GovernedInstitution,
+    StopCondition,
+)
 from .orchestrator import (
     ExecutionOutput,
     Goal,
@@ -71,12 +79,14 @@ __all__ = [
     "AuthorityViolation", "Budget", "CANONICAL_CONTRACTS", "CandidateEvaluation",
     "ConcurrencyError", "ContractDecodeError", "Dependency", "DependencyKind",
     "DuplicatePublicationError", "DuplicateRequestError", "Escalation", "EscalationStatus",
-    "EventEnvelope", "ExecutionOutput", "Goal", "GovernedOrchestrator", "InvalidTransition",
-    "LeaseConflictError", "NoEligibleAgent", "Objective", "PlannedTask", "Policy",
-    "PolicyEffect", "QueueEvent", "QueueEventKind", "QueueItem", "QueueItemNotFound",
-    "QueueStatus", "Review", "ReviewOutcome", "ReviewOutput", "ReviewVerdict", "RiskLevel",
-    "RoutingDecision", "RoutingRequest", "RunResult", "RunStatus", "SCHEMA_VERSION",
-    "SQLiteAgentRegistry", "SQLiteStore", "SQLiteWorkQueue", "State", "StateMachine",
-    "TransitionRequest", "WorkItem", "WorkItemNotFound", "WorkItemRepository", "WorkItemSpec",
-    "decode_contract", "default_planner", "encode_contract",
+    "EventEnvelope", "ExecutionOutput", "FounderEscalationPacket", "Goal",
+    "GovernanceAction", "GovernanceContext", "GovernanceStore", "GovernedInstitution",
+    "GovernedOrchestrator", "InvalidTransition", "LeaseConflictError", "NoEligibleAgent",
+    "Objective", "PlannedTask", "Policy", "PolicyEffect", "QueueEvent", "QueueEventKind",
+    "QueueItem", "QueueItemNotFound", "QueueStatus", "Review", "ReviewOutcome",
+    "ReviewOutput", "ReviewVerdict", "RiskLevel", "RoutingDecision", "RoutingRequest",
+    "RunResult", "RunStatus", "SCHEMA_VERSION", "SQLiteAgentRegistry", "SQLiteStore",
+    "SQLiteWorkQueue", "State", "StateMachine", "StopCondition", "TransitionRequest",
+    "WorkItem", "WorkItemNotFound", "WorkItemRepository", "WorkItemSpec", "decode_contract",
+    "default_planner", "encode_contract",
 ]
