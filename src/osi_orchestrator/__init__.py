@@ -34,6 +34,15 @@ from .queue import (
     QueueStatus,
     SQLiteWorkQueue,
 )
+from .routing import (
+    AgentNotFound,
+    AuthorityViolation,
+    CandidateEvaluation,
+    NoEligibleAgent,
+    RoutingDecision,
+    RoutingRequest,
+    SQLiteAgentRegistry,
+)
 from .state_machine import (
     Actor,
     AuditEvent,
@@ -55,6 +64,7 @@ from .storage import (
 __all__ = [
     "Actor",
     "Agent",
+    "AgentNotFound",
     "AgentRole",
     "ApprovalDecision",
     "ApprovalOutcome",
@@ -62,8 +72,10 @@ __all__ = [
     "ArtifactStatus",
     "AuditEvent",
     "AuditLedger",
+    "AuthorityViolation",
     "Budget",
     "CANONICAL_CONTRACTS",
+    "CandidateEvaluation",
     "ConcurrencyError",
     "ContractDecodeError",
     "Dependency",
@@ -75,6 +87,7 @@ __all__ = [
     "EventEnvelope",
     "InvalidTransition",
     "LeaseConflictError",
+    "NoEligibleAgent",
     "Objective",
     "Policy",
     "PolicyEffect",
@@ -86,7 +99,10 @@ __all__ = [
     "Review",
     "ReviewOutcome",
     "RiskLevel",
+    "RoutingDecision",
+    "RoutingRequest",
     "SCHEMA_VERSION",
+    "SQLiteAgentRegistry",
     "SQLiteStore",
     "SQLiteWorkQueue",
     "State",
