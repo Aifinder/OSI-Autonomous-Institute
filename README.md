@@ -102,8 +102,12 @@ The bundled CLI executors are deterministic demonstration adapters. Production d
 
 ## Verification status
 
-The implementation is committed, but release readiness requires a successful GitHub Actions run covering tests, Ruff, and strict MyPy. Do not treat an unreported or missing check as a pass.
+Release 0.1 passed GitHub Actions on commit `e3b0236b838307c6c6cee4308c8e5d07ef04b763`, including tests, Ruff, and strict MyPy. The CI workflow was subsequently upgraded to Node.js 24-compatible action versions in commit `f597dc30c272e8413d07670fcee8da807eef5427`.
+
+## Program management
+
+The living executive program record is maintained in [`docs/program/PROGRAM_STATUS.md`](docs/program/PROGRAM_STATUS.md). It tracks milestones, risks, decisions, releases, and the critical path.
 
 ## Next milestone
 
-After Release 0.1 verification, the next milestone is the continuous operating loop: scheduler, event consumers, worker supervision, restart recovery, operational health metrics, and plugin-based domain applications such as LOIS.
+Release 0.2 is the continuous operating kernel: scheduler, event consumers, worker supervision, restart recovery, operational health metrics, and plugin-based domain applications such as LOIS.
