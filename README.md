@@ -46,7 +46,7 @@ Release 0.1 establishes:
 
 1. Governed lifecycle state machine — implemented.
 2. Persistent audit ledger and work-item repository — implemented.
-3. Durable event bus and work queue — next.
+3. Durable event bus and work queue — active next component.
 4. Agent registry and capability routing.
 5. Governance and independent review pipeline.
 6. Institutional memory and autonomous execution loop.
