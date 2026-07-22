@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from types import TracebackType
-from typing import Iterable, cast
+from typing import cast
 from uuid import UUID, uuid4
 
 from .contracts import Agent, AgentRole, RiskLevel, WorkItemSpec
