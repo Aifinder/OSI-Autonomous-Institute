@@ -47,6 +47,11 @@ Release 0.1 establishes:
 - Publish, claim, acknowledge, delayed retry, and dead-letter operations.
 - Idempotent publication and deterministic event ordering within a work item.
 - Correlation, causation, actor, attempt, and timestamp audit metadata.
+- Persistent SQLite agent registry.
+- Deterministic capability, tool, domain, reliability, and cost routing.
+- Production/review role separation and self-review prevention.
+- Explicit authority requirements for high-risk work.
+- Auditable candidate evaluations, selections, pauses, escalations, and replacements.
 - Automated lint, strict type checking, and tests through GitHub Actions.
 
 The persisted `WorkItem` remains the lifecycle snapshot used by the storage layer. The richer, versioned planning and execution contract is `WorkItemSpec`, which avoids breaking the existing persistence API while the queue schema is introduced.
@@ -55,14 +60,18 @@ The persisted `WorkItem` remains the lifecycle snapshot used by the storage laye
 
 `SQLiteWorkQueue` persists every event and queue transition. A worker receives exclusive ownership through a time-bounded lease. Successful work is acknowledged; recoverable failure is returned to the ready queue until the configured attempt limit; exhausted work is moved to dead letter. Expired leases are recovered deterministically after process restart, and every operation is retained in the queue audit stream.
 
+## Routing semantics
+
+`SQLiteAgentRegistry` persists agent definitions and immutable routing decisions. Routing filters by enabled status, role, capability, tools, domain, exclusions, self-review boundaries, and high-risk authority. Eligible candidates are scored by capability match, reliability, and cost, then selected deterministically. Failed agents can be excluded through bounded replacement routing. Unsupported moderate-risk work is paused; unsupported high-risk work is escalated and audited.
+
 ## Current build sequence
 
 1. Governed lifecycle state machine — implemented.
 2. Canonical schema contracts — implementation committed; CI validation pending.
 3. Persistent audit ledger and work-item repository — implemented.
 4. Durable event bus and work queue — implementation committed; CI validation pending.
-5. Agent registry and capability routing — next critical-path component.
-6. Governance and independent review pipeline.
+5. Agent registry, capability routing, and authority boundaries — implementation committed; CI validation pending.
+6. Governance and independent review pipeline — next critical-path component.
 7. Institutional memory and autonomous execution loop.
 
 ## Current status
