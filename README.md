@@ -35,21 +35,26 @@ Release 0.1 establishes:
 ## Implemented kernel capabilities
 
 - Canonical governed work-item lifecycle.
-- Immutable transition audit events.
+- Versioned canonical contracts for objectives, work specifications, dependencies, agents, reviews, approval decisions, artifacts, escalations, budgets, and policies.
+- Strict JSON-compatible contract encoding and decoding with schema-version checks.
+- Immutable, versioned transition audit events.
 - SQLite-backed work-item snapshots and audit history.
 - Optimistic concurrency and stale-write protection.
 - Idempotent transition request handling.
 - Recovery by replaying the authoritative audit stream.
 - Automated lint, strict type checking, and tests through GitHub Actions.
 
+The persisted `WorkItem` remains the lifecycle snapshot used by the storage layer. The richer, versioned planning and execution contract is `WorkItemSpec`, which avoids breaking the existing persistence API while the queue schema is introduced.
+
 ## Current build sequence
 
 1. Governed lifecycle state machine — implemented.
-2. Persistent audit ledger and work-item repository — implemented.
-3. Durable event bus and work queue — active next component.
-4. Agent registry and capability routing.
-5. Governance and independent review pipeline.
-6. Institutional memory and autonomous execution loop.
+2. Canonical schema contracts — implementation committed; CI validation pending.
+3. Persistent audit ledger and work-item repository — implemented.
+4. Durable event bus and work queue — next critical-path component.
+5. Agent registry and capability routing.
+6. Governance and independent review pipeline.
+7. Institutional memory and autonomous execution loop.
 
 ## Current status
 
