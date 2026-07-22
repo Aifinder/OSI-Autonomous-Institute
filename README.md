@@ -1,79 +1,109 @@
 # OSI Autonomous Institute
 
-The OSI Autonomous Institute repository is the canonical system of record for the AI-native institutional engineering platform that will design, build, review, approve, version, and evolve the Operating Systems Institute and future ventures.
+The OSI Autonomous Institute repository is the canonical system of record for an AI-native institutional engineering platform that plans, executes, reviews, approves, versions, and evolves autonomous institutional work.
 
 ## Core idea
 
-The orchestrator is the operating center of the system. It converts founder intent, constitutional rules, strategy, and backlog priorities into governed execution across specialist agents, reviewers, software systems, and knowledge pipelines.
+The orchestrator converts founder intent, constitutional rules, strategy, budgets, and backlog priorities into governed execution across specialist agents and independent reviewers. Thomas Lee is not the routine approver. Founder involvement is reserved for constitutional or mission changes, irreversible strategic commitments, material legal or financial exposure, and unresolved high-risk exceptions.
 
-The founder is not the routine approver. Thomas Lee retains authority only for constitutional changes, mission changes, irreversible strategic commitments, material legal or financial exposure, and unresolved high-risk escalations.
+## Release 0.1 capabilities
 
-## Initial release
+- Governed work-item lifecycle and immutable audit events.
+- Versioned contracts for objectives, work, dependencies, agents, reviews, approvals, artifacts, escalations, budgets, and policies.
+- SQLite persistence, optimistic concurrency, idempotency, and replay-based recovery.
+- Durable work queue with leases, retries, delayed work, and dead-letter handling.
+- Persistent agent registry and deterministic capability routing.
+- Production/review role separation and self-review prevention.
+- Executable goal-to-plan-to-artifact vertical slice.
+- Dependency scheduling and cycle detection.
+- Independent review gates, bounded revision loops, and automatic approval.
+- Canonical artifact promotion with SHA-256 content hashes.
+- Policy stop conditions for legal, irreversible, mission, and constitutional decisions.
+- Budget creation, reservation, hard-stop enforcement, and settlement.
+- Structured founder escalation packets.
+- Operator CLI.
+- Pytest, Ruff, and strict MyPy configuration.
 
-Release 0.1 establishes:
+## Local setup
 
-- Institutional Master Orchestrator
-- task queue and dependency graph
-- agent contracts and authority boundaries
-- automated review and approval gates
-- escalation policy
-- audit trail
-- artifact registry
-- architecture decision records
-- operator CLI and dashboard requirements
+Python 3.12 or newer is required.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+pytest
+ruff check .
+mypy src
+```
+
+On Windows PowerShell, activate the environment with:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+## Operator CLI
+
+Initialize a local database and install the default demonstration producer and reviewer:
+
+```bash
+osi --db osi.db init
+```
+
+Run a routine governed goal:
+
+```bash
+osi --db osi.db run \
+  "Create market brief" \
+  "Produce a concise market brief with evidence and recommendations." \
+  --success "The brief contains actionable recommendations"
+```
+
+Create a budget and pass its returned identifier into a cost-bearing goal:
+
+```bash
+osi --db osi.db create-budget research 25000 --currency USD
+osi --db osi.db run "Research opportunity" "Evaluate the opportunity." \
+  --estimated-cost 500 --budget-id <BUDGET_ID>
+```
+
+A qualifying founder-only decision is stopped before execution and returned as a structured decision packet:
+
+```bash
+osi --db osi.db run "Sign agreement" "Enter a binding supplier agreement." \
+  --legal-commitment
+```
+
+Inspect status and event history:
+
+```bash
+osi --db osi.db status <GOAL_ID>
+osi --db osi.db events <GOAL_ID>
+```
+
+The bundled CLI executors are deterministic demonstration adapters. Production deployments should inject real model and tool adapters through the `ProductionExecutor` and `ReviewExecutor` protocols.
 
 ## Operating principles
 
 1. Escalate exceptions, not routine work.
-2. Every autonomous decision must be traceable and reversible when practical.
+2. Every autonomous decision must be traceable.
 3. Agents may propose; governed workflows promote artifacts to canonical status.
 4. GitHub is the canonical versioned source of truth.
-5. The orchestrator owns planning, delegation, review routing, revision loops, approval routing, and status reporting.
+5. The orchestrator owns planning, delegation, review routing, revision loops, approval, and status reporting.
 6. Founder involvement is reserved for decisions that cannot safely be delegated.
 7. Autonomy expands only after measured validation.
 
-## Implemented kernel capabilities
+## Architecture
 
-- Canonical governed work-item lifecycle.
-- Versioned canonical contracts for objectives, work specifications, dependencies, agents, reviews, approval decisions, artifacts, escalations, budgets, and policies.
-- Strict JSON-compatible contract encoding and decoding with schema-version checks.
-- Immutable, versioned transition audit events.
-- SQLite-backed work-item snapshots and audit history.
-- Optimistic concurrency and stale-write protection.
-- Idempotent transition request handling.
-- Recovery by replaying the authoritative audit stream.
-- Durable SQLite event envelopes and governed queue entries.
-- Exclusive worker leases with expiration recovery after restart.
-- Publish, claim, acknowledge, delayed retry, and dead-letter operations.
-- Idempotent publication and deterministic event ordering within a work item.
-- Correlation, causation, actor, attempt, and timestamp audit metadata.
-- Persistent SQLite agent registry.
-- Deterministic capability, tool, domain, reliability, and cost routing.
-- Production/review role separation and self-review prevention.
-- Explicit authority requirements for high-risk work.
-- Auditable candidate evaluations, selections, pauses, escalations, and replacements.
-- Automated lint, strict type checking, and tests through GitHub Actions.
+`GovernedOrchestrator` supplies the executable planning, routing, production, review, approval, artifact, escalation, and event path. `GovernanceStore` supplies policy stop conditions, budgets, reservations, settlement, and founder packets. `GovernedInstitution` composes those layers into a preflight-governed execution boundary.
 
-The persisted `WorkItem` remains the lifecycle snapshot used by the storage layer. The richer, versioned planning and execution contract is `WorkItemSpec`, which avoids breaking the existing persistence API while the queue schema is introduced.
+`SQLiteAgentRegistry` filters agents by status, role, capability, tools, domain eligibility, exclusions, self-review rules, and high-risk authority. Eligible candidates are scored by capability match, reliability, and cost and selected deterministically.
 
-## Queue semantics
+## Verification status
 
-`SQLiteWorkQueue` persists every event and queue transition. A worker receives exclusive ownership through a time-bounded lease. Successful work is acknowledged; recoverable failure is returned to the ready queue until the configured attempt limit; exhausted work is moved to dead letter. Expired leases are recovered deterministically after process restart, and every operation is retained in the queue audit stream.
+The implementation is committed, but release readiness requires a successful GitHub Actions run covering tests, Ruff, and strict MyPy. Do not treat an unreported or missing check as a pass.
 
-## Routing semantics
+## Next milestone
 
-`SQLiteAgentRegistry` persists agent definitions and immutable routing decisions. Routing filters by enabled status, role, capability, tools, domain, exclusions, self-review boundaries, and high-risk authority. Eligible candidates are scored by capability match, reliability, and cost, then selected deterministically. Failed agents can be excluded through bounded replacement routing. Unsupported moderate-risk work is paused; unsupported high-risk work is escalated and audited.
-
-## Current build sequence
-
-1. Governed lifecycle state machine — implemented.
-2. Canonical schema contracts — implementation committed; CI validation pending.
-3. Persistent audit ledger and work-item repository — implemented.
-4. Durable event bus and work queue — implementation committed; CI validation pending.
-5. Agent registry, capability routing, and authority boundaries — implementation committed; CI validation pending.
-6. Governance and independent review pipeline — next critical-path component.
-7. Institutional memory and autonomous execution loop.
-
-## Current status
-
-The Orchestrator Kernel is under active implementation. Existing KCS production remains paused at KCS-072 until the autonomous pipeline is operational and validated.
+After Release 0.1 verification, the next milestone is the continuous operating loop: scheduler, event consumers, worker supervision, restart recovery, operational health metrics, and plugin-based domain applications such as LOIS.
