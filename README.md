@@ -42,17 +42,26 @@ Release 0.1 establishes:
 - Optimistic concurrency and stale-write protection.
 - Idempotent transition request handling.
 - Recovery by replaying the authoritative audit stream.
+- Durable SQLite event envelopes and governed queue entries.
+- Exclusive worker leases with expiration recovery after restart.
+- Publish, claim, acknowledge, delayed retry, and dead-letter operations.
+- Idempotent publication and deterministic event ordering within a work item.
+- Correlation, causation, actor, attempt, and timestamp audit metadata.
 - Automated lint, strict type checking, and tests through GitHub Actions.
 
 The persisted `WorkItem` remains the lifecycle snapshot used by the storage layer. The richer, versioned planning and execution contract is `WorkItemSpec`, which avoids breaking the existing persistence API while the queue schema is introduced.
+
+## Queue semantics
+
+`SQLiteWorkQueue` persists every event and queue transition. A worker receives exclusive ownership through a time-bounded lease. Successful work is acknowledged; recoverable failure is returned to the ready queue until the configured attempt limit; exhausted work is moved to dead letter. Expired leases are recovered deterministically after process restart, and every operation is retained in the queue audit stream.
 
 ## Current build sequence
 
 1. Governed lifecycle state machine — implemented.
 2. Canonical schema contracts — implementation committed; CI validation pending.
 3. Persistent audit ledger and work-item repository — implemented.
-4. Durable event bus and work queue — next critical-path component.
-5. Agent registry and capability routing.
+4. Durable event bus and work queue — implementation committed; CI validation pending.
+5. Agent registry and capability routing — next critical-path component.
 6. Governance and independent review pipeline.
 7. Institutional memory and autonomous execution loop.
 
