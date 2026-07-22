@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from pathlib import Path
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -11,7 +12,14 @@ from osi_orchestrator.storage import (
 )
 
 
-def request(work_item_id, from_state, to_state, *, request_id=None, seconds=0):
+def request(
+    work_item_id: UUID,
+    from_state: State,
+    to_state: State,
+    *,
+    request_id: UUID | None = None,
+    seconds: int = 0,
+) -> TransitionRequest:
     return TransitionRequest(
         request_id=request_id or uuid4(),
         work_item_id=work_item_id,
@@ -20,11 +28,12 @@ def request(work_item_id, from_state, to_state, *, request_id=None, seconds=0):
         actor=Actor(id="agent-1", role="planner"),
         reason="advance governed work",
         evidence=("artifact://plan",),
-        occurred_at=datetime(2026, 7, 22, 3, 0, tzinfo=UTC) + timedelta(seconds=seconds),
+        occurred_at=datetime(2026, 7, 22, 3, 0, tzinfo=UTC)
+        + timedelta(seconds=seconds),
     )
 
 
-def test_transition_survives_restart_and_replays(tmp_path):
+def test_transition_survives_restart_and_replays(tmp_path: Path) -> None:
     database = tmp_path / "kernel.db"
     work_item_id = uuid4()
     created_at = datetime(2026, 7, 22, 2, 59, tzinfo=UTC)
@@ -47,7 +56,9 @@ def test_transition_survives_restart_and_replays(tmp_path):
         assert len(restarted.events_for(work_item_id)) == 1
 
 
-def test_duplicate_transition_request_is_rejected_without_mutation(tmp_path):
+def test_duplicate_transition_request_is_rejected_without_mutation(
+    tmp_path: Path,
+) -> None:
     database = tmp_path / "kernel.db"
     work_item_id = uuid4()
     request_id = uuid4()
@@ -78,7 +89,7 @@ def test_duplicate_transition_request_is_rejected_without_mutation(tmp_path):
         assert len(store.events_for(work_item_id)) == 1
 
 
-def test_stale_version_is_rejected(tmp_path):
+def test_stale_version_is_rejected(tmp_path: Path) -> None:
     work_item_id = uuid4()
     with SQLiteStore(tmp_path / "kernel.db") as store:
         store.create(work_item_id, State.PROPOSED, datetime.now(UTC))
@@ -97,7 +108,7 @@ def test_stale_version_is_rejected(tmp_path):
         assert len(store.events_for(work_item_id)) == 1
 
 
-def test_audit_event_round_trip_preserves_governance_fields(tmp_path):
+def test_audit_event_round_trip_preserves_governance_fields(tmp_path: Path) -> None:
     work_item_id = uuid4()
     with SQLiteStore(tmp_path / "kernel.db") as store:
         store.create(work_item_id, State.PROPOSED, datetime.now(UTC))
