@@ -187,6 +187,8 @@ class SQLiteStore(AuditLedger, WorkItemRepository):
         request: TransitionRequest,
         expected_version: int,
     ) -> WorkItem:
+        if self.contains_request(request.request_id):
+            raise DuplicateRequestError(str(request.request_id))
         event = self._state_machine.transition(request)
         try:
             with self._connection:
@@ -207,8 +209,6 @@ class SQLiteStore(AuditLedger, WorkItemRepository):
                         f"{persisted_state.value} does not match request state "
                         f"{request.from_state.value}"
                     )
-                if self.contains_request(request.request_id):
-                    raise DuplicateRequestError(str(request.request_id))
 
                 cursor = self._connection.execute(
                     """
