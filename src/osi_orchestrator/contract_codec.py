@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import fields, is_dataclass
+from collections.abc import Mapping as MappingABC
+from dataclasses import fields
 from datetime import datetime
 from enum import Enum
 from types import UnionType
@@ -23,7 +24,10 @@ def encode_contract(contract: object) -> JsonObject:
     contract_type = type(contract)
     if contract_type not in CANONICAL_CONTRACTS:
         raise TypeError(f"Unsupported contract type: {contract_type.__name__}")
-    payload = {item.name: _encode_value(getattr(contract, item.name)) for item in fields(contract)}
+    payload = {
+        item.name: _encode_value(getattr(contract, item.name))
+        for item in fields(contract_type)
+    }
     return {"contract_type": contract_type.__name__, "payload": payload}
 
 
@@ -71,8 +75,6 @@ def _encode_value(value: object) -> Any:
         return [_encode_value(item) for item in value]
     if isinstance(value, Mapping):
         return {str(key): _encode_value(item) for key, item in value.items()}
-    if is_dataclass(value):
-        return {item.name: _encode_value(getattr(value, item.name)) for item in fields(value)}
     return value
 
 
@@ -86,7 +88,7 @@ def _decode_value(value: Any, annotation: Any) -> Any:
             raise TypeError("Expected a list for tuple field")
         return tuple(_decode_value(item, item_type) for item in value)
 
-    if origin in {dict, Mapping}:
+    if origin in {dict, MappingABC}:
         if not isinstance(value, Mapping):
             raise TypeError("Expected an object for mapping field")
         value_type = args[1] if len(args) == 2 else Any
